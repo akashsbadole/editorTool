@@ -7,7 +7,10 @@ import {
   type UpdateProject,
   type Deployment,
   type InsertDeployment,
-  type UpdateDeployment
+  type UpdateDeployment,
+  type Settings,
+  type InsertSettings,
+  type UpdateSettings
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
@@ -32,17 +35,47 @@ export interface IStorage {
   createDeployment(deployment: InsertDeployment): Promise<Deployment>;
   updateDeployment(id: string, updates: UpdateDeployment): Promise<Deployment | undefined>;
   deleteDeployment(id: string): Promise<boolean>;
+  
+  // Settings
+  getSettings(): Promise<Settings>;
+  updateSettings(updates: UpdateSettings): Promise<Settings>;
 }
 
 export class MemStorage implements IStorage {
   private projects: Map<string, Project>;
   private prompts: Map<string, Prompt>;
   private deployments: Map<string, Deployment>;
+  private settings: Settings;
 
   constructor() {
     this.projects = new Map();
     this.prompts = new Map();
     this.deployments = new Map();
+    
+    // Initialize default settings
+    this.settings = {
+      id: randomUUID(),
+      userId: null,
+      defaultAiProvider: "ollama",
+      ollamaUrl: "http://localhost:11434",
+      ollamaDefaultModel: "deepseek-coder:6.7b",
+      openaiApiKey: null,
+      openaiDefaultModel: "gpt-4o",
+      openaiOrganization: null,
+      anthropicApiKey: null,
+      anthropicDefaultModel: "claude-sonnet-4-20250514",
+      mistralApiKey: null,
+      mistralDefaultModel: "mistral-large-latest",
+      defaultCssFramework: "tailwindcss",
+      enableFigmaIntegration: false,
+      figmaAccessToken: null,
+      codeStyle: "prettier",
+      typescript: true,
+      includeComments: true,
+      generateTests: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
   }
 
   // Projects
@@ -67,6 +100,7 @@ export class MemStorage implements IStorage {
       envVars: {},
       deploymentUrl: null,
       status: "draft",
+      isPublic: insertProject.isPublic || false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -118,6 +152,8 @@ export class MemStorage implements IStorage {
       projectId: insertPrompt.projectId || null,
       generatedFiles: {},
       status: "pending",
+      aiProvider: insertPrompt.aiProvider || "ollama",
+      model: insertPrompt.model || "deepseek-coder",
       createdAt: new Date(),
     };
     this.prompts.set(id, prompt);
@@ -173,6 +209,16 @@ export class MemStorage implements IStorage {
 
   async deleteDeployment(id: string): Promise<boolean> {
     return this.deployments.delete(id);
+  }
+
+  // Settings
+  async getSettings(): Promise<Settings> {
+    return this.settings;
+  }
+
+  async updateSettings(updates: UpdateSettings): Promise<Settings> {
+    this.settings = { ...this.settings, ...updates, updatedAt: new Date() };
+    return this.settings;
   }
 }
 

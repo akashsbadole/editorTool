@@ -10,11 +10,22 @@ import { useTheme } from "@/components/theme-provider";
 import { CodeEditor } from "@/components/code-editor";
 import { FileTree } from "@/components/file-tree";
 import { StreamingModal } from "@/components/streaming-modal";
+import { AIProviderSelector } from "@/components/ai-provider-selector";
+import { EnhancedPromptGenerator } from "@/components/enhanced-prompt-generator";
 import { Terminal } from "@/components/terminal";
 import { DeploymentPanel } from "@/components/deployment-panel";
 import { apiRequest } from "@/lib/queryClient";
 import { downloadAsZip, getLanguageFromFileName } from "@/lib/file-utils";
-import { Project, InsertPrompt, Prompt, packageTypes, PackageType } from "@shared/schema";
+import { 
+  Project, 
+  InsertPrompt, 
+  Prompt, 
+  packageTypes, 
+  PackageType, 
+  AIProvider, 
+  CSSFramework,
+  aiProviders
+} from "@shared/schema";
 import { 
   Code, 
   Moon, 
@@ -46,6 +57,19 @@ export default function IDE() {
   const [showStreaming, setShowStreaming] = useState(false);
   const [currentPromptId, setCurrentPromptId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('editor');
+  
+  // AI Provider state
+  const [selectedProvider, setSelectedProvider] = useState<AIProvider>('ollama');
+  const [selectedModel, setSelectedModel] = useState<string>('deepseek-coder');
+  const [selectedFramework, setSelectedFramework] = useState<CSSFramework>('tailwindcss');
+  
+  // Initialize model when provider changes
+  useEffect(() => {
+    const provider = aiProviders.find(p => p.value === selectedProvider);
+    if (provider && provider.models.length > 0) {
+      setSelectedModel(provider.models[0]);
+    }
+  }, [selectedProvider]);
 
   const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
@@ -185,21 +209,8 @@ export default function IDE() {
     updateProjectMutation.mutate(updatedFiles);
   };
 
-  const handleGenerateCode = (command: string) => {
-    if (!command.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a command to generate code.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    createPromptMutation.mutate({
-      projectId: project.id,
-      packageType: project.packageType as PackageType,
-      command: command.trim(),
-    });
+  const handlePromptSubmit = (promptData: InsertPrompt) => {
+    createPromptMutation.mutate(promptData);
   };
 
   const handleStreamingComplete = (files: Record<string, string>) => {
@@ -286,6 +297,12 @@ export default function IDE() {
               Save
             </Button>
             
+            <EnhancedPromptGenerator
+              projectId={project.id}
+              onSubmit={handlePromptSubmit}
+              isLoading={createPromptMutation.isPending}
+            />
+            
             <Button
               variant="ghost"
               size="sm"
@@ -309,13 +326,15 @@ export default function IDE() {
               )}
             </Button>
             
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-slate-600 dark:text-slate-300"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
+            <AISettingsPanel>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-slate-600 dark:text-slate-300"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </AISettingsPanel>
           </div>
         </div>
       </header>

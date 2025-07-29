@@ -1,122 +1,80 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { aiProviderService } from "./ai-providers";
 import { 
   insertPromptSchema, 
   updatePromptSchema,
   insertProjectSchema,
   updateProjectSchema,
   insertDeploymentSchema,
-  updateDeploymentSchema
+  updateDeploymentSchema,
+  updateSettingsSchema
 } from "@shared/schema";
 import { z } from "zod";
 
-// Ollama API integration
-async function* streamOllamaResponse(packageType: string, command: string) {
-  const ollamaUrl = process.env.OLLAMA_URL || "http://localhost:11434";
-  const model = process.env.OLLAMA_MODEL || "deepseek-coder";
-  
-  const prompt = `You are an expert code generator. Generate production-ready code based on the following request:
-
-Package Type: ${packageType}
-Request: ${command}
-
-Generate complete, functional code with proper file structure. Include all necessary files, imports, and configurations. Respond with a JSON object containing:
-{
-  "files": {
-    "filename.ext": "file content here",
-    "folder/file.ext": "nested file content"
-  },
-  "description": "Brief description of what was generated"
-}
-
-Ensure the code is production-ready, follows best practices, and includes proper error handling.`;
-
+// AI API integration with multiple providers
+async function* streamAIResponse(aiProvider: string, model: string, packageType: string, command: string, cssFramework?: string) {
   try {
-    const response = await fetch(`${ollamaUrl}/api/generate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        prompt,
-        stream: true,
-        options: {
-          temperature: 0.1, // Lower temperature for more consistent code generation
-          top_p: 0.9,
-        }
-      }),
-    });
+    const aiConfig = {
+      provider: aiProvider as any,
+      model: model,
+      packageType: packageType as any,
+      command: command,
+      cssFramework: cssFramework as any,
+    };
 
-    if (!response.ok) {
-      throw new Error(`Ollama API error: ${response.status}`);
-    }
+    let fullResponse = '';
 
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('No response body');
-    }
-
-    let buffer = '';
-    let generatedFiles: Record<string, string> = {};
-    
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = new TextDecoder().decode(value);
-      buffer += chunk;
-
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        if (line.trim()) {
-          try {
-            const data = JSON.parse(line);
-            
-            if (data.response) {
-              yield {
-                type: 'progress',
-                content: data.response,
-                done: data.done || false
-              };
-
-              // Try to parse generated files if response looks like JSON
-              if (data.done && data.response.includes('"files"')) {
-                try {
-                  const jsonMatch = data.response.match(/\{[\s\S]*\}/);
-                  if (jsonMatch) {
-                    const result = JSON.parse(jsonMatch[0]);
-                    if (result.files) {
-                      generatedFiles = result.files;
-                    }
-                  }
-                } catch (e) {
-                  // If not valid JSON, treat as plain text
-                  generatedFiles = {
-                    'generated-code.txt': data.response
-                  };
-                }
-              }
-            }
-
-            if (data.done) {
-              yield {
-                type: 'complete',
-                files: generatedFiles,
-                done: true
-              };
-              break;
-            }
-          } catch (e) {
-            // Skip invalid JSON lines
-            continue;
-          }
-        }
+    // Handle special package types
+    if (packageType === 'html') {
+      const stream = await aiProviderService.generateHTML(command, cssFramework as any);
+      
+      for await (const chunk of stream) {
+        fullResponse += chunk;
+        
+        yield {
+          type: 'progress',
+          content: chunk,
+          done: false
+        };
+      }
+    } else if (packageType === 'css') {
+      const stream = await aiProviderService.generateCSS(command, cssFramework as any || 'tailwindcss');
+      
+      for await (const chunk of stream) {
+        fullResponse += chunk;
+        
+        yield {
+          type: 'progress',
+          content: chunk,
+          done: false
+        };
+      }
+    } else {
+      // Use the general AI provider service
+      const stream = await aiProviderService.generateCode(aiConfig);
+      
+      for await (const chunk of stream) {
+        fullResponse += chunk;
+        
+        yield {
+          type: 'progress',
+          content: chunk,
+          done: false
+        };
       }
     }
+
+    // Parse the complete response and extract files
+    const files = parseGeneratedFiles(fullResponse);
+    
+    yield {
+      type: 'complete',
+      files: files,
+      done: true
+    };
+
   } catch (error) {
     yield {
       type: 'error',
@@ -124,6 +82,56 @@ Ensure the code is production-ready, follows best practices, and includes proper
       done: true
     };
   }
+}
+
+// Parse generated files from AI response
+function parseGeneratedFiles(response: string): Record<string, string> {
+  const files: Record<string, string> = {};
+  
+  try {
+    // Try to extract files from <FILES> format
+    const filesMatch = response.match(/<FILES>([\s\S]*)<\/FILES>/);
+    if (filesMatch) {
+      const filesContent = filesMatch[1];
+      const fileRegex = /<FILE path="([^"]+)">([\s\S]*?)<\/FILE>/g;
+      let match;
+      
+      while ((match = fileRegex.exec(filesContent)) !== null) {
+        const [, path, content] = match;
+        files[path] = content.trim();
+      }
+      
+      if (Object.keys(files).length > 0) {
+        return files;
+      }
+    }
+    
+    // Try to extract JSON format
+    const jsonMatch = response.match(/\{[\s\S]*"files"[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const result = JSON.parse(jsonMatch[0]);
+        if (result.files && typeof result.files === 'object') {
+          return result.files;
+        }
+      } catch (e) {
+        // JSON parsing failed, continue to fallback
+      }
+    }
+    
+    // Fallback: create a single file with the entire response
+    const extension = response.includes('<!DOCTYPE html') ? 'html' : 
+                     response.includes('import ') || response.includes('export ') ? 'tsx' :
+                     response.includes('.selector') || response.includes('{') ? 'css' : 'txt';
+    
+    files[`generated-code.${extension}`] = response.trim();
+    
+  } catch (error) {
+    console.error('Error parsing generated files:', error);
+    files['generated-code.txt'] = response.trim();
+  }
+  
+  return files;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -304,7 +312,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updatePrompt(prompt.id, { status: "generating" });
 
       try {
-        for await (const chunk of streamOllamaResponse(prompt.packageType, prompt.command)) {
+        for await (const chunk of streamAIResponse(
+          prompt.aiProvider, 
+          prompt.model, 
+          prompt.packageType, 
+          prompt.command
+        )) {
           res.write(`data: ${JSON.stringify(chunk)}\n\n`);
 
           if (chunk.type === 'complete' && chunk.files) {
@@ -347,6 +360,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete prompt" });
+    }
+  });
+
+  // Settings endpoints
+  app.get("/api/settings", async (req, res) => {
+    try {
+      const settings = await storage.getSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  app.patch("/api/settings", async (req, res) => {
+    try {
+      const validatedData = updateSettingsSchema.parse(req.body);
+      const settings = await storage.updateSettings(validatedData);
+      res.json(settings);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update settings" });
     }
   });
 
