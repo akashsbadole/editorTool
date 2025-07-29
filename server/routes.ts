@@ -1,7 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPromptSchema, updatePromptSchema } from "@shared/schema";
+import { 
+  insertPromptSchema, 
+  updatePromptSchema,
+  insertProjectSchema,
+  updateProjectSchema,
+  insertDeploymentSchema,
+  updateDeploymentSchema
+} from "@shared/schema";
 import { z } from "zod";
 
 // Ollama API integration
@@ -120,10 +127,129 @@ Ensure the code is production-ready, follows best practices, and includes proper
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Get all prompts
-  app.get("/api/prompts", async (_req, res) => {
+  // Projects endpoints
+  app.get("/api/projects", async (_req, res) => {
     try {
-      const prompts = await storage.getPrompts();
+      const projects = await storage.getProjects();
+      res.json(projects);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch projects" });
+    }
+  });
+
+  app.get("/api/projects/:id", async (req, res) => {
+    try {
+      const project = await storage.getProject(req.params.id);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      res.json(project);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch project" });
+    }
+  });
+
+  app.post("/api/projects", async (req, res) => {
+    try {
+      const validatedData = insertProjectSchema.parse(req.body);
+      const project = await storage.createProject(validatedData);
+      res.json(project);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create project" });
+    }
+  });
+
+  app.patch("/api/projects/:id", async (req, res) => {
+    try {
+      const validatedData = updateProjectSchema.parse(req.body);
+      const project = await storage.updateProject(req.params.id, validatedData);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      res.json(project);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to update project" });
+    }
+  });
+
+  app.delete("/api/projects/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteProject(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete project" });
+    }
+  });
+
+  // Deployments endpoints
+  app.get("/api/deployments/:projectId", async (req, res) => {
+    try {
+      const deployments = await storage.getDeployments(req.params.projectId);
+      res.json(deployments);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch deployments" });
+    }
+  });
+
+  app.post("/api/deployments", async (req, res) => {
+    try {
+      const validatedData = insertDeploymentSchema.parse(req.body);
+      const deployment = await storage.createDeployment(validatedData);
+      
+      // Simulate deployment process
+      setTimeout(async () => {
+        try {
+          await storage.updateDeployment(deployment.id, {
+            status: "building",
+            logs: "Building application...\nInstalling dependencies...\nRunning build scripts..."
+          });
+          
+          // Simulate build completion
+          setTimeout(async () => {
+            const mockUrl = `https://${validatedData.platform}-${deployment.id.slice(0, 8)}.app`;
+            await storage.updateDeployment(deployment.id, {
+              status: "deployed",
+              url: mockUrl,
+              logs: "Build completed successfully!\nApplication deployed to: " + mockUrl
+            });
+            
+            // Update project with deployment URL
+            await storage.updateProject(validatedData.projectId, {
+              deploymentUrl: mockUrl,
+              status: "deployed"
+            });
+          }, 3000);
+        } catch (error) {
+          await storage.updateDeployment(deployment.id, {
+            status: "error",
+            logs: "Deployment failed: " + (error instanceof Error ? error.message : "Unknown error")
+          });
+        }
+      }, 1000);
+      
+      res.json(deployment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create deployment" });
+    }
+  });
+
+  // Get all prompts
+  app.get("/api/prompts", async (req, res) => {
+    try {
+      const projectId = req.query.projectId as string;
+      const prompts = await storage.getPrompts(projectId);
       res.json(prompts);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch prompts" });

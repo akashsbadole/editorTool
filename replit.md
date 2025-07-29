@@ -8,6 +8,19 @@ CodeCraft is a full-stack web application that enables users to generate product
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (July 29, 2025)
+
+✓ Enhanced platform with comprehensive IDE features and deployment capabilities
+✓ Added advanced project management with CRUD operations  
+✓ Integrated deployment panel with Vercel, Netlify, Railway support
+✓ Built full-featured terminal with development commands simulation
+✓ Created resizable IDE layout with Monaco editor, file tree, and tabs
+✓ Implemented environment variables management for deployments
+✓ Added project status tracking and deployment monitoring
+✓ Created comprehensive README.md with full documentation
+✓ Enhanced schema with projects and deployments data models
+✓ Integrated real-time deployment simulation with status updates
+
 ## System Architecture
 
 ### Frontend Architecture
