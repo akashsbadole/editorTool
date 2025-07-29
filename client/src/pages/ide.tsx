@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -11,29 +15,30 @@ import { CodeEditor } from "@/components/code-editor";
 import { FileTree } from "@/components/file-tree";
 import { StreamingModal } from "@/components/streaming-modal";
 import { AIProviderSelector } from "@/components/ai-provider-selector";
+import { AISettingsPanel } from "@/components/ai-settings-panel";
 import { EnhancedPromptGenerator } from "@/components/enhanced-prompt-generator";
 import { Terminal } from "@/components/terminal";
 import { DeploymentPanel } from "@/components/deployment-panel";
 import { apiRequest } from "@/lib/queryClient";
 import { downloadAsZip, getLanguageFromFileName } from "@/lib/file-utils";
-import { 
-  Project, 
-  InsertPrompt, 
-  Prompt, 
-  packageTypes, 
-  PackageType, 
-  AIProvider, 
+import {
+  Project,
+  InsertPrompt,
+  Prompt,
+  packageTypes,
+  PackageType,
+  AIProvider,
   CSSFramework,
-  aiProviders
+  aiProviders,
 } from "@shared/schema";
-import { 
-  Code, 
-  Moon, 
-  Sun, 
-  Save, 
-  Play, 
-  Download, 
-  Settings, 
+import {
+  Code,
+  Moon,
+  Sun,
+  Save,
+  Play,
+  Download,
+  Settings,
   Terminal as TerminalIcon,
   Rocket,
   FolderOpen,
@@ -42,30 +47,34 @@ import {
   Search,
   GitBranch,
   Share2,
-  ArrowLeft
+  ArrowLeft,
 } from "lucide-react";
 
 export default function IDE() {
   const [location, setLocation] = useLocation();
   const [match, params] = useRoute("/ide/:projectId");
   const projectId = params?.projectId;
-  
-  const [selectedFile, setSelectedFile] = useState<string>('');
-  const [selectedFileContent, setSelectedFileContent] = useState<string>('');
-  const [unsavedChanges, setUnsavedChanges] = useState<Record<string, string>>({});
+
+  const [selectedFile, setSelectedFile] = useState<string>("");
+  const [selectedFileContent, setSelectedFileContent] = useState<string>("");
+  const [unsavedChanges, setUnsavedChanges] = useState<Record<string, string>>(
+    {}
+  );
   const [isGenerating, setIsGenerating] = useState(false);
   const [showStreaming, setShowStreaming] = useState(false);
   const [currentPromptId, setCurrentPromptId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('editor');
-  
+  const [activeTab, setActiveTab] = useState("editor");
+
   // AI Provider state
-  const [selectedProvider, setSelectedProvider] = useState<AIProvider>('ollama');
-  const [selectedModel, setSelectedModel] = useState<string>('deepseek-coder');
-  const [selectedFramework, setSelectedFramework] = useState<CSSFramework>('tailwindcss');
-  
+  const [selectedProvider, setSelectedProvider] =
+    useState<AIProvider>("ollama");
+  const [selectedModel, setSelectedModel] = useState<string>("deepseek-coder");
+  const [selectedFramework, setSelectedFramework] =
+    useState<CSSFramework>("tailwindcss");
+
   // Initialize model when provider changes
   useEffect(() => {
-    const provider = aiProviders.find(p => p.value === selectedProvider);
+    const provider = aiProviders.find((p) => p.value === selectedProvider);
     if (provider && provider.models.length > 0) {
       setSelectedModel(provider.models[0]);
     }
@@ -77,15 +86,15 @@ export default function IDE() {
 
   // Fetch project data
   const { data: project, isLoading: projectLoading } = useQuery<Project>({
-    queryKey: ['/api/projects', projectId],
+    queryKey: ["/api/projects", projectId],
     enabled: !!projectId,
   });
 
   // Create prompt mutation
   const createPromptMutation = useMutation({
     mutationFn: async (data: InsertPrompt) => {
-      const response = await apiRequest('POST', '/api/prompts', data);
-      return await response.json() as Prompt;
+      const response = await apiRequest("POST", "/api/prompts", data);
+      return (await response.json()) as Prompt;
     },
     onSuccess: (prompt) => {
       setCurrentPromptId(prompt.id);
@@ -104,12 +113,16 @@ export default function IDE() {
   // Update project files mutation
   const updateProjectMutation = useMutation({
     mutationFn: async (files: Record<string, string>) => {
-      if (!project) throw new Error('No project selected');
-      const response = await apiRequest('PATCH', `/api/projects/${project.id}`, { files });
-      return await response.json() as Project;
+      if (!project) throw new Error("No project selected");
+      const response = await apiRequest(
+        "PATCH",
+        `/api/projects/${project.id}`,
+        { files }
+      );
+      return (await response.json()) as Project;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId] });
       setUnsavedChanges({});
       toast({
         title: "Files Saved",
@@ -128,11 +141,11 @@ export default function IDE() {
   // Auto-save unsaved changes every 30 seconds
   useEffect(() => {
     if (Object.keys(unsavedChanges).length === 0) return;
-    
+
     const autoSave = setInterval(() => {
       handleSaveFiles();
     }, 30000);
-    
+
     return () => clearInterval(autoSave);
   }, [unsavedChanges]);
 
@@ -146,7 +159,7 @@ export default function IDE() {
   }, [project, selectedFile]);
 
   if (!projectId) {
-    setLocation('/');
+    setLocation("/");
     return null;
   }
 
@@ -155,7 +168,9 @@ export default function IDE() {
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-400">Loading project...</p>
+          <p className="text-slate-600 dark:text-slate-400">
+            Loading project...
+          </p>
         </div>
       </div>
     );
@@ -172,7 +187,7 @@ export default function IDE() {
           <p className="text-slate-500 dark:text-slate-400 mb-4">
             The project you're looking for doesn't exist or has been deleted.
           </p>
-          <Button onClick={() => setLocation('/')}>
+          <Button onClick={() => setLocation("/")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Projects
           </Button>
@@ -189,9 +204,9 @@ export default function IDE() {
   const handleContentChange = (newContent: string) => {
     setSelectedFileContent(newContent);
     if (selectedFile) {
-      setUnsavedChanges(prev => ({
+      setUnsavedChanges((prev) => ({
         ...prev,
-        [selectedFile]: newContent
+        [selectedFile]: newContent,
       }));
     }
   };
@@ -204,7 +219,7 @@ export default function IDE() {
       });
       return;
     }
-    
+
     const updatedFiles = { ...project.files, ...unsavedChanges };
     updateProjectMutation.mutate(updatedFiles);
   };
@@ -217,7 +232,7 @@ export default function IDE() {
     const updatedFiles = { ...project.files, ...files };
     updateProjectMutation.mutate(updatedFiles);
     setIsGenerating(false);
-    
+
     toast({
       title: "Code Generated!",
       description: `Successfully generated ${Object.keys(files).length} files.`,
@@ -235,9 +250,9 @@ export default function IDE() {
       return;
     }
 
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
     downloadAsZip(filesToExport, `${project.name}-${timestamp}`);
-    
+
     toast({
       title: "Export Started",
       description: "Your project is being downloaded as a ZIP file.",
@@ -256,35 +271,43 @@ export default function IDE() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setLocation('/')}
+              onClick={() => setLocation("/")}
               className="text-slate-600 dark:text-slate-300"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Projects
             </Button>
-            
+
             <div className="flex items-center space-x-2">
               <FolderOpen className="h-5 w-5 text-blue-600" />
-              <h1 className="font-semibold text-slate-900 dark:text-white">{project.name}</h1>
+              <h1 className="font-semibold text-slate-900 dark:text-white">
+                {project.name}
+              </h1>
               {project.description && (
                 <span className="text-sm text-slate-500 dark:text-slate-400">
                   • {project.description}
                 </span>
               )}
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <Badge variant="outline">
-                {packageTypes.find(t => t.value === project.packageType)?.label}
+                {
+                  packageTypes.find((t) => t.value === project.packageType)
+                    ?.label
+                }
               </Badge>
               {hasUnsavedChanges && (
-                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                <Badge
+                  variant="secondary"
+                  className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+                >
                   Unsaved Changes
                 </Badge>
               )}
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-3">
             <Button
               variant="ghost"
@@ -296,13 +319,13 @@ export default function IDE() {
               <Save className="h-4 w-4 mr-1" />
               Save
             </Button>
-            
+
             <EnhancedPromptGenerator
               projectId={project.id}
               onSubmit={handlePromptSubmit}
               isLoading={createPromptMutation.isPending}
             />
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -312,20 +335,20 @@ export default function IDE() {
               <Download className="h-4 w-4 mr-1" />
               Export
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleTheme}
               className="text-slate-600 dark:text-slate-300"
             >
-              {theme === 'dark' ? (
+              {theme === "dark" ? (
                 <Sun className="h-4 w-4" />
               ) : (
                 <Moon className="h-4 w-4" />
               )}
             </Button>
-            
+
             <AISettingsPanel>
               <Button
                 variant="ghost"
@@ -352,9 +375,9 @@ export default function IDE() {
               />
             </div>
           </ResizablePanel>
-          
+
           <ResizableHandle />
-          
+
           {/* Main Content Area */}
           <ResizablePanel defaultSize={60}>
             <div className="h-full flex flex-col">
@@ -362,22 +385,31 @@ export default function IDE() {
               <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList className="h-10 p-0 bg-transparent">
-                    <TabsTrigger value="editor" className="data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-700">
+                    <TabsTrigger
+                      value="editor"
+                      className="data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-700"
+                    >
                       <Code className="h-4 w-4 mr-2" />
                       Editor
                     </TabsTrigger>
-                    <TabsTrigger value="terminal" className="data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-700">
+                    <TabsTrigger
+                      value="terminal"
+                      className="data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-700"
+                    >
                       <TerminalIcon className="h-4 w-4 mr-2" />
                       Terminal
                     </TabsTrigger>
-                    <TabsTrigger value="deploy" className="data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-700">
+                    <TabsTrigger
+                      value="deploy"
+                      className="data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-700"
+                    >
                       <Rocket className="h-4 w-4 mr-2" />
                       Deploy
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
-              
+
               {/* Tab Content */}
               <div className="flex-1">
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -399,7 +431,8 @@ export default function IDE() {
                             No File Selected
                           </h2>
                           <p className="text-slate-500 dark:text-slate-400 mb-6">
-                            Select a file from the file tree to start editing, or generate new code.
+                            Select a file from the file tree to start editing,
+                            or generate new code.
                           </p>
                           <Button
                             onClick={() => setShowStreaming(true)}
@@ -412,12 +445,15 @@ export default function IDE() {
                       </div>
                     )}
                   </TabsContent>
-                  
+
                   <TabsContent value="terminal" className="h-full m-0">
                     <Terminal projectId={project.id} files={currentFiles} />
                   </TabsContent>
-                  
-                  <TabsContent value="deploy" className="h-full m-0 p-6 overflow-y-auto">
+
+                  <TabsContent
+                    value="deploy"
+                    className="h-full m-0 p-6 overflow-y-auto"
+                  >
                     <DeploymentPanel project={project} />
                   </TabsContent>
                 </Tabs>

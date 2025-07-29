@@ -25,8 +25,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings as SettingsIcon, Bot, Code, Paintbrush, TestTube } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Settings as SettingsIcon,
+  Bot,
+  Code,
+  Paintbrush,
+  TestTube,
+} from "lucide-react";
 
 interface AISettingsPanelProps {
   children: React.ReactNode;
@@ -42,11 +54,8 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
   });
 
   const updateSettingsMutation = useMutation({
-    mutationFn: (data: UpdateSettings) => apiRequest("/api/settings", {
-      method: "PATCH",
-      body: JSON.stringify(data),
-      headers: { "Content-Type": "application/json" },
-    }),
+    mutationFn: (data: UpdateSettings) =>
+      apiRequest("PATCH", "/api/settings", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
       toast({ title: "Settings updated successfully" });
@@ -90,14 +99,12 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
   };
 
   const updateField = (field: keyof UpdateSettings, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -105,7 +112,8 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
             AI Integration Settings
           </DialogTitle>
           <DialogDescription>
-            Configure AI providers, code generation preferences, and development tools.
+            Configure AI providers, code generation preferences, and development
+            tools.
           </DialogDescription>
         </DialogHeader>
 
@@ -123,7 +131,8 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                   AI Provider Configuration
                 </CardTitle>
                 <CardDescription>
-                  Select your preferred AI provider and configure connection settings.
+                  Select your preferred AI provider and configure connection
+                  settings.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -131,7 +140,9 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                   <Label htmlFor="defaultProvider">Default AI Provider</Label>
                   <Select
                     value={formData.defaultAiProvider}
-                    onValueChange={(value) => updateField("defaultAiProvider", value)}
+                    onValueChange={(value) =>
+                      updateField("defaultAiProvider", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select provider" />
@@ -139,7 +150,9 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                     <SelectContent>
                       <SelectItem value="ollama">Ollama (Local)</SelectItem>
                       <SelectItem value="openai">OpenAI</SelectItem>
-                      <SelectItem value="anthropic">Anthropic Claude</SelectItem>
+                      <SelectItem value="anthropic">
+                        Anthropic Claude
+                      </SelectItem>
                       <SelectItem value="mistral">Mistral AI</SelectItem>
                     </SelectContent>
                   </Select>
@@ -154,7 +167,9 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                       <Input
                         id="ollamaUrl"
                         value={formData.ollamaUrl || ""}
-                        onChange={(e) => updateField("ollamaUrl", e.target.value)}
+                        onChange={(e) =>
+                          updateField("ollamaUrl", e.target.value)
+                        }
                         placeholder="http://localhost:11434"
                       />
                     </div>
@@ -163,7 +178,9 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                       <Input
                         id="ollamaModel"
                         value={formData.ollamaDefaultModel || ""}
-                        onChange={(e) => updateField("ollamaDefaultModel", e.target.value)}
+                        onChange={(e) =>
+                          updateField("ollamaDefaultModel", e.target.value)
+                        }
                         placeholder="deepseek-coder:6.7b"
                       />
                     </div>
@@ -180,33 +197,45 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                         id="openaiKey"
                         type="password"
                         value={formData.openaiApiKey || ""}
-                        onChange={(e) => updateField("openaiApiKey", e.target.value)}
+                        onChange={(e) =>
+                          updateField("openaiApiKey", e.target.value)
+                        }
                         placeholder="sk-..."
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="openaiModel">Default Model</Label>
                       <Select
-                        value={formData.openaiDefaultModel}
-                        onValueChange={(value) => updateField("openaiDefaultModel", value)}
+                        value={formData.openaiDefaultModel || ""}
+                        onValueChange={(value) =>
+                          updateField("openaiDefaultModel", value)
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                          <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
-                          <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                          <SelectItem value="gpt-4-turbo">
+                            GPT-4 Turbo
+                          </SelectItem>
+                          <SelectItem value="gpt-3.5-turbo">
+                            GPT-3.5 Turbo
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="openaiOrg">Organization ID (Optional)</Label>
+                    <Label htmlFor="openaiOrg">
+                      Organization ID (Optional)
+                    </Label>
                     <Input
                       id="openaiOrg"
                       value={formData.openaiOrganization || ""}
-                      onChange={(e) => updateField("openaiOrganization", e.target.value)}
+                      onChange={(e) =>
+                        updateField("openaiOrganization", e.target.value)
+                      }
                       placeholder="org-..."
                     />
                   </div>
@@ -214,7 +243,9 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
 
                 {/* Anthropic Settings */}
                 <div className="space-y-3 border rounded-lg p-4">
-                  <h4 className="font-medium">Anthropic Claude Configuration</h4>
+                  <h4 className="font-medium">
+                    Anthropic Claude Configuration
+                  </h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="anthropicKey">API Key</Label>
@@ -222,23 +253,33 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                         id="anthropicKey"
                         type="password"
                         value={formData.anthropicApiKey || ""}
-                        onChange={(e) => updateField("anthropicApiKey", e.target.value)}
+                        onChange={(e) =>
+                          updateField("anthropicApiKey", e.target.value)
+                        }
                         placeholder="sk-ant-..."
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="anthropicModel">Default Model</Label>
                       <Select
-                        value={formData.anthropicDefaultModel}
-                        onValueChange={(value) => updateField("anthropicDefaultModel", value)}
+                        value={formData.anthropicDefaultModel || ""}
+                        onValueChange={(value) =>
+                          updateField("anthropicDefaultModel", value)
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="claude-sonnet-4-20250514">Claude 4.0 Sonnet</SelectItem>
-                          <SelectItem value="claude-3-7-sonnet-20250219">Claude 3.7 Sonnet</SelectItem>
-                          <SelectItem value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</SelectItem>
+                          <SelectItem value="claude-sonnet-4-20250514">
+                            Claude 4.0 Sonnet
+                          </SelectItem>
+                          <SelectItem value="claude-3-7-sonnet-20250219">
+                            Claude 3.7 Sonnet
+                          </SelectItem>
+                          <SelectItem value="claude-3-5-sonnet-20241022">
+                            Claude 3.5 Sonnet
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -255,23 +296,33 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                         id="mistralKey"
                         type="password"
                         value={formData.mistralApiKey || ""}
-                        onChange={(e) => updateField("mistralApiKey", e.target.value)}
+                        onChange={(e) =>
+                          updateField("mistralApiKey", e.target.value)
+                        }
                         placeholder="..."
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="mistralModel">Default Model</Label>
                       <Select
-                        value={formData.mistralDefaultModel}
-                        onValueChange={(value) => updateField("mistralDefaultModel", value)}
+                        value={formData.mistralDefaultModel || ""}
+                        onValueChange={(value) =>
+                          updateField("mistralDefaultModel", value)
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="mistral-large-latest">Mistral Large</SelectItem>
-                          <SelectItem value="mistral-medium-latest">Mistral Medium</SelectItem>
-                          <SelectItem value="mistral-small-latest">Mistral Small</SelectItem>
+                          <SelectItem value="mistral-large-latest">
+                            Mistral Large
+                          </SelectItem>
+                          <SelectItem value="mistral-medium-latest">
+                            Mistral Medium
+                          </SelectItem>
+                          <SelectItem value="mistral-small-latest">
+                            Mistral Small
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -296,14 +347,18 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                   <div className="space-y-2">
                     <Label htmlFor="cssFramework">Default CSS Framework</Label>
                     <Select
-                      value={formData.defaultCssFramework}
-                      onValueChange={(value) => updateField("defaultCssFramework", value)}
+                      value={formData.defaultCssFramework || ""}
+                      onValueChange={(value) =>
+                        updateField("defaultCssFramework", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="tailwindcss">Tailwind CSS</SelectItem>
+                        <SelectItem value="tailwindcss">
+                          Tailwind CSS
+                        </SelectItem>
                         <SelectItem value="bootstrap">Bootstrap</SelectItem>
                         <SelectItem value="vanilla">Vanilla CSS</SelectItem>
                       </SelectContent>
@@ -312,7 +367,7 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                   <div className="space-y-2">
                     <Label htmlFor="codeStyle">Code Style</Label>
                     <Select
-                      value={formData.codeStyle}
+                      value={formData.codeStyle || ""}
                       onValueChange={(value) => updateField("codeStyle", value)}
                     >
                       <SelectTrigger>
@@ -337,8 +392,10 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                     </div>
                     <Switch
                       id="typescript"
-                      checked={formData.typescript}
-                      onCheckedChange={(checked) => updateField("typescript", checked)}
+                      checked={formData.typescript || false}
+                      onCheckedChange={(checked) =>
+                        updateField("typescript", checked)
+                      }
                     />
                   </div>
 
@@ -351,8 +408,10 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                     </div>
                     <Switch
                       id="comments"
-                      checked={formData.includeComments}
-                      onCheckedChange={(checked) => updateField("includeComments", checked)}
+                      checked={formData.includeComments || false}
+                      onCheckedChange={(checked) =>
+                        updateField("includeComments", checked)
+                      }
                     />
                   </div>
 
@@ -365,8 +424,10 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                     </div>
                     <Switch
                       id="tests"
-                      checked={formData.generateTests}
-                      onCheckedChange={(checked) => updateField("generateTests", checked)}
+                      checked={formData.generateTests || false}
+                      onCheckedChange={(checked) =>
+                        updateField("generateTests", checked)
+                      }
                     />
                   </div>
                 </div>
@@ -387,15 +448,19 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="figmaIntegration">Enable Figma Integration</Label>
+                    <Label htmlFor="figmaIntegration">
+                      Enable Figma Integration
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Allow conversion of Figma designs to code
                     </p>
                   </div>
                   <Switch
                     id="figmaIntegration"
-                    checked={formData.enableFigmaIntegration}
-                    onCheckedChange={(checked) => updateField("enableFigmaIntegration", checked)}
+                    checked={formData.enableFigmaIntegration || false}
+                    onCheckedChange={(checked) =>
+                      updateField("enableFigmaIntegration", checked)
+                    }
                   />
                 </div>
 
@@ -406,11 +471,14 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
                       id="figmaToken"
                       type="password"
                       value={formData.figmaAccessToken || ""}
-                      onChange={(e) => updateField("figmaAccessToken", e.target.value)}
+                      onChange={(e) =>
+                        updateField("figmaAccessToken", e.target.value)
+                      }
                       placeholder="figd_..."
                     />
                     <p className="text-sm text-muted-foreground">
-                      Get your access token from Figma → Account Settings → Personal Access Tokens
+                      Get your access token from Figma → Account Settings →
+                      Personal Access Tokens
                     </p>
                   </div>
                 )}
@@ -421,11 +489,13 @@ export function AISettingsPanel({ children }: AISettingsPanelProps) {
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={handleSave}
                 disabled={updateSettingsMutation.isPending}
               >
-                {updateSettingsMutation.isPending ? "Saving..." : "Save Settings"}
+                {updateSettingsMutation.isPending
+                  ? "Saving..."
+                  : "Save Settings"}
               </Button>
             </div>
           </div>
