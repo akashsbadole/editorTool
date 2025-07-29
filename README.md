@@ -2,9 +2,12 @@
 
 CodeCraft AI is a comprehensive web-based AI code generation platform that provides a full IDE experience with code generation, editing capabilities, project management, and direct deployment functionality. The platform is powered by Ollama AI models and offers real-time streaming responses, multi-file preview with Monaco Editor, theme switching, and one-click deployment to various platforms.
 
+![Screenshot](screenshots.png)
+
 ## 🚀 Features
 
 ### Core Functionality
+
 - **AI Code Generation**: Powered by DeepSeek Coder and Code Llama models via Ollama
 - **Full IDE Experience**: Monaco Editor with syntax highlighting, IntelliSense, and multi-file support
 - **Real-time Streaming**: Live code generation with progress feedback
@@ -14,6 +17,7 @@ CodeCraft AI is a comprehensive web-based AI code generation platform that provi
 - **Theme Support**: Light/dark mode with seamless switching
 
 ### Advanced Features
+
 - **Package Type Selection**: Support for Frontend, Backend, Full-stack, Mobile, Desktop, and CLI projects
 - **Environment Variables**: Secure management of deployment secrets
 - **File Tree Navigation**: Intuitive file explorer with folder structure
@@ -25,6 +29,7 @@ CodeCraft AI is a comprehensive web-based AI code generation platform that provi
 ## 🏗️ Architecture
 
 ### Frontend Stack
+
 - **React 18** with TypeScript for type-safe development
 - **Vite** for fast development and optimized builds
 - **shadcn/ui** components built on Radix UI primitives
@@ -34,6 +39,7 @@ CodeCraft AI is a comprehensive web-based AI code generation platform that provi
 - **Monaco Editor** for professional code editing experience
 
 ### Backend Stack
+
 - **Node.js** with Express.js for the server
 - **TypeScript** with ES modules throughout
 - **PostgreSQL** with Drizzle ORM for data persistence
@@ -42,6 +48,7 @@ CodeCraft AI is a comprehensive web-based AI code generation platform that provi
 - **In-memory caching** with database fallback
 
 ### AI Integration
+
 - **Ollama Models**: DeepSeek Coder, Code Llama, and other coding models
 - **Streaming Support**: Real-time generation feedback
 - **Context-Aware**: Maintains project context across generations
@@ -50,28 +57,32 @@ CodeCraft AI is a comprehensive web-based AI code generation platform that provi
 ## 📦 Installation & Setup
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - PostgreSQL database (optional, uses in-memory storage by default)
 - Ollama installed and running locally
 
 ### Quick Start
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd codecraft-ai
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up Ollama**
+
    ```bash
    # Install Ollama (macOS/Linux)
    curl -fsSL https://ollama.ai/install.sh | sh
-   
+
    # Pull a coding model
    ollama pull deepseek-coder:6.7b
    # or
@@ -79,6 +90,7 @@ CodeCraft AI is a comprehensive web-based AI code generation platform that provi
    ```
 
 4. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -98,7 +110,7 @@ DATABASE_URL=postgresql://username:password@localhost:5432/codecraft
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=deepseek-coder:6.7b
 
-# Server Configuration  
+# Server Configuration
 PORT=5000
 NODE_ENV=development
 ```
@@ -108,12 +120,14 @@ NODE_ENV=development
 ### Creating Your First Project
 
 1. **Start a New Project**
+
    - Click "Create New Project" on the home page
    - Enter a project name and description
    - Select the package type (Frontend, Backend, Full-stack, etc.)
    - Choose whether to initialize with AI or start empty
 
 2. **Generate Code with AI**
+
    - Open your project in the IDE
    - Use the code generation panel
    - Describe what you want to build in natural language
@@ -121,6 +135,7 @@ NODE_ENV=development
    - Review and edit the generated files
 
 3. **Edit and Develop**
+
    - Use the Monaco editor for code editing
    - Navigate files with the file tree
    - Use the integrated terminal for development commands
@@ -135,7 +150,7 @@ NODE_ENV=development
 ### Package Types
 
 - **Frontend**: React, Vue, Angular, vanilla JavaScript applications
-- **Backend**: Node.js, Python, Go APIs and services  
+- **Backend**: Node.js, Python, Go APIs and services
 - **Full-stack**: Complete applications with frontend and backend
 - **Mobile**: React Native, Flutter mobile applications
 - **Desktop**: Electron, Tauri desktop applications
@@ -155,16 +170,19 @@ The platform supports natural language descriptions such as:
 ### Supported Platforms
 
 #### Vercel
+
 - **Best for**: Frontend and serverless applications
 - **Features**: Auto HTTPS, Global CDN, Zero configuration
 - **Process**: Connects via GitHub, automatic builds and deployments
 
-#### Netlify  
+#### Netlify
+
 - **Best for**: JAMstack and static sites
 - **Features**: Form handling, Serverless functions, Split testing
 - **Process**: Git-based deployments with continuous integration
 
 #### Railway
+
 - **Best for**: Full-stack applications with databases
 - **Features**: Database hosting, Auto scaling, Team collaboration
 - **Process**: Container-based deployments with automatic scaling
@@ -172,16 +190,19 @@ The platform supports natural language descriptions such as:
 ### Deployment Steps
 
 1. **Prepare Your Project**
+
    - Ensure all code is saved and tested
    - Set up required environment variables
    - Verify package.json scripts are configured
 
 2. **Configure Deployment**
+
    - Select your preferred platform
    - Set environment variables in the deployment panel
    - Review deployment configuration
 
 3. **Deploy**
+
    - Click "Deploy Now" to start the process
    - Monitor deployment progress in real-time
    - Access your live application once deployment completes
@@ -217,6 +238,7 @@ codecraft-ai/
 ### Key Components
 
 #### Frontend Components
+
 - **ProjectManager**: Handles project CRUD operations and listing
 - **CodeEditor**: Monaco-based code editor with syntax highlighting
 - **FileTree**: Interactive file system navigation
@@ -225,6 +247,7 @@ codecraft-ai/
 - **StreamingModal**: Real-time code generation interface
 
 #### Backend Services
+
 - **Routes**: RESTful API endpoints for projects, prompts, and deployments
 - **Storage**: Abstracted storage interface with memory and database implementations
 - **Ollama Integration**: AI model communication and streaming
@@ -232,6 +255,7 @@ codecraft-ai/
 ### Adding New Features
 
 1. **Define Data Schema**
+
    ```typescript
    // shared/schema.ts
    export const newFeatureSchema = z.object({
@@ -242,6 +266,7 @@ codecraft-ai/
    ```
 
 2. **Update Storage Interface**
+
    ```typescript
    // server/storage.ts
    interface IStorage {
@@ -251,6 +276,7 @@ codecraft-ai/
    ```
 
 3. **Add API Routes**
+
    ```typescript
    // server/routes.ts
    app.post("/api/newfeature", async (req, res) => {
@@ -271,9 +297,11 @@ codecraft-ai/
 ### Projects API
 
 #### GET /api/projects
+
 Returns all projects for the user.
 
 **Response:**
+
 ```json
 [
   {
@@ -289,9 +317,11 @@ Returns all projects for the user.
 ```
 
 #### POST /api/projects
+
 Creates a new project.
 
 **Request:**
+
 ```json
 {
   "name": "New Project",
@@ -301,26 +331,33 @@ Creates a new project.
 ```
 
 #### GET /api/projects/:id
+
 Returns a specific project by ID.
 
 #### PATCH /api/projects/:id
+
 Updates a project's files or metadata.
 
 #### DELETE /api/projects/:id
+
 Deletes a project.
 
 ### Prompts API
 
 #### GET /api/prompts
+
 Returns all prompts, optionally filtered by project.
 
 **Query Parameters:**
+
 - `projectId` (optional): Filter prompts by project
 
 #### POST /api/prompts
+
 Creates a new code generation prompt.
 
 **Request:**
+
 ```json
 {
   "projectId": "proj_123",
@@ -332,12 +369,15 @@ Creates a new code generation prompt.
 ### Deployments API
 
 #### GET /api/deployments/:projectId
+
 Returns deployment history for a project.
 
 #### POST /api/deployments
+
 Creates a new deployment.
 
 **Request:**
+
 ```json
 {
   "projectId": "proj_123",
@@ -381,6 +421,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🚀 Roadmap
 
 ### Upcoming Features
+
 - [ ] Multi-user collaboration and real-time editing
 - [ ] Advanced debugging tools and breakpoints
 - [ ] Plugin system for custom code generators
@@ -391,6 +432,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] Team workspaces and project sharing
 
 ### Version History
+
 - **v1.0.0**: Initial release with core IDE and deployment features
 - **v1.1.0** (Planned): Team collaboration and advanced deployment options
 - **v1.2.0** (Planned): Plugin system and custom AI model support
