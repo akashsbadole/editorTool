@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(222.2, 84%, 4.9%);
+  --muted: hsl(210, 40%, 98%);
+  --muted-foreground: hsl(215.4, 16.3%, 46.9%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(222.2, 84%, 4.9%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(222.2, 84%, 4.9%);
+  --border: hsl(214.3, 31.8%, 91.4%);
+  --input: hsl(214.3, 31.8%, 91.4%);
+  --primary: hsl(221.2, 83.2%, 53.3%);
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: hsl(210, 40%, 96%);
+  --secondary-foreground: hsl(222.2, 47.4%, 11.2%);
+  --accent: hsl(210, 40%, 96%);
+  --accent-foreground: hsl(222.2, 47.4%, 11.2%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --ring: hsl(221.2, 83.2%, 53.3%);
+  --radius: 0.5rem;
+
+  /* Custom brand colors matching design */
+  --brand-50: hsl(214, 100%, 97%);
+  --brand-500: hsl(217, 91%, 60%);
+  --brand-600: hsl(221, 83%, 53%);
+  --brand-700: hsl(224, 76%, 48%);
+}
+
+.dark {
+  --background: hsl(222.2, 84%, 4.9%);
+  --foreground: hsl(210, 40%, 98%);
+  --muted: hsl(217.2, 32.6%, 17.5%);
+  --muted-foreground: hsl(215, 20.2%, 65.1%);
+  --popover: hsl(222.2, 84%, 4.9%);
+  --popover-foreground: hsl(210, 40%, 98%);
+  --card: hsl(222.2, 84%, 4.9%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --border: hsl(217.2, 32.6%, 17.5%);
+  --input: hsl(217.2, 32.6%, 17.5%);
+  --primary: hsl(217, 91%, 60%);
+  --primary-foreground: hsl(222.2, 84%, 4.9%);
+  --secondary: hsl(217.2, 32.6%, 17.5%);
+  --secondary-foreground: hsl(210, 40%, 98%);
+  --accent: hsl(217.2, 32.6%, 17.5%);
+  --accent-foreground: hsl(210, 40%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --ring: hsl(217, 91%, 60%);
+
+  /* Dark mode brand colors */
+  --brand-50: hsl(222, 84%, 5%);
+  --brand-500: hsl(217, 91%, 60%);
+  --brand-600: hsl(221, 83%, 53%);
+  --brand-700: hsl(224, 76%, 48%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+/* Monaco Editor Theme Support */
+.monaco-editor .margin {
+  background-color: hsl(var(--muted)) !important;
+}
+
+.monaco-editor .current-line {
+  background-color: hsl(var(--accent)) !important;
+}
+
+/* Custom scrollbar for file tree */
+.file-tree-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.file-tree-scroll::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+.file-tree-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+.file-tree-scroll::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Streaming animation */
+@keyframes pulse-green {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse-green {
+  animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* File type icons */
+.file-icon-react::before {
+  content: "⚛️";
+  margin-right: 0.5rem;
+}
+
+.file-icon-ts::before {
+  content: "📘";
+  margin-right: 0.5rem;
+}
+
+.file-icon-js::before {
+  content: "📜";
+  margin-right: 0.5rem;
+}
+
+.file-icon-css::before {
+  content: "🎨";
+  margin-right: 0.5rem;
+}
+
+.file-icon-html::before {
+  content: "🌐";
+  margin-right: 0.5rem;
+}
+
+.file-icon-json::before {
+  content: "📋";
+  margin-right: 0.5rem;
+}
+
+.file-icon-folder::before {
+  content: "📁";
+  margin-right: 0.5rem;
+}
